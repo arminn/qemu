@@ -15,6 +15,7 @@
 #include "system/tpm.h"
 #include "system/tpm_backend.h"
 #include "system/runstate.h"
+#include "system/xen.h"
 #include "hw/xen/xen-pvh-common.h"
 #include "trace.h"
 
@@ -184,6 +185,12 @@ static void xen_pvh_init(MachineState *ms)
     XenPVHMachineState *s = XEN_PVH_MACHINE(ms);
     XenPVHMachineClass *xpc = XEN_PVH_MACHINE_GET_CLASS(s);
     MemoryRegion *sysmem = get_system_memory();
+    int rc = -1;
+
+    if (!xen_enabled()) {
+        error_report("xenpv machine requires the Xen accelerator");
+        exit(1);
+    }
 
     if (ms->ram_size == 0) {
         warn_report("%s: ram size not specified. QEMU machine started"
@@ -193,9 +200,14 @@ static void xen_pvh_init(MachineState *ms)
     }
 
     xen_pvh_init_ram(s, sysmem);
-    xen_register_ioreq(&s->ioreq, ms->smp.max_cpus,
+    rc = xen_register_ioreq(&s->ioreq, ms->smp.max_cpus,
                        xpc->handle_bufioreq,
                        &xen_memory_listener);
+
+    if (rc) {
+        DPRINTF("Device emulation is not available, only PV backend can be used\n");
+        return;
+    }
 
     if (s->cfg.virtio_mmio_num) {
         xen_create_virtio_mmio_devices(s);
