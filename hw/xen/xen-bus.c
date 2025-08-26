@@ -1159,6 +1159,6 @@ void xen_bus_init(void)
     sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
     qbus_set_bus_hotplug_handler(bus);
 
-    qemu_create_nic_bus_devices(bus, TYPE_XEN_DEVICE, "xen-net-device",
-                                "xen", "xen-net-device");
+   // qemu_create_nic_bus_devices(bus, TYPE_XEN_DEVICE, "xen-net-device",
+   //                             "xen", "xen-net-device");
 }
